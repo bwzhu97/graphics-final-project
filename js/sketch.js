@@ -19,8 +19,11 @@ var INSTRUMENTS = 2;
 var clicked = [];
 var lineLocation;
 var system;
+var paused;
 var sounds = [];
 var selectedInstrument;
+var buttons = [];
+//var resetButton, pauseButton, switchButton;
 
 //-----------------------------------------------------------------------------------------------------------
 
@@ -55,10 +58,26 @@ function setup() {
   }
   selectedInstrument = 0;
 
-  // add reset button
-  button = createButton('reset');
-  button.position(width/2, 30);
-  button.mousePressed(clearClicked);
+  // // add reset button
+  // resetButton = createButton('clear');
+  // resetButton.position(30, 30);
+  // resetButton.mousePressed(clearClicked);
+
+  // // add pause button
+  // pauseButton = createButton('pause');
+  // pauseButton.position(30, 70);
+  // pauseButton.mousePressed(pausePlayback);
+
+  // // add switch instrument button
+  // switchButton = createButton('switch');
+  // switchButton.position(30, 110);
+  // switchButton.mousePressed(switchInstrument);
+  buttons[0] = new Button(30, 30, 70, 70, null, () => switchInstrument(0), true);
+  buttons[1] = new Button(30, 70, 70, 110, null, () => switchInstrument(1), false);
+  buttons[2] = new Button(30, 110, 70, 150, null, clearClicked, false);
+  buttons[3] = new Button(30, 150, 70, 190, null, clearClicked, false);
+  buttons[4] = new Button(30, 190, 70, 230, null, pausePlayback, false);
+  buttons[5] = new Button(30, 230, 70, 270, null, clearClicked, false);
 }
 
 //-----------------------------------------------------------------------------------------------------------
@@ -80,8 +99,15 @@ function draw() {
     }
   }
 
+  // buttons
+  for (var i = 0; i < buttons.length; i++) {
+    var mouseOver = buttons[i].isMouseOver(mouseX, mouseY);
+    buttons[i].draw(mouseOver);
+  }
+
   // playback line
   strokeWeight(5);
+  stroke(255);
   line(lineLocation, 0, lineLocation, height);
 
   if (Math.abs((lineLocation - XSHIFT + XDIST/2) % XDIST - XDIST/2) < SPEED/2) {
@@ -90,22 +116,30 @@ function draw() {
       for (var a = 0; a < INSTRUMENTS; a++) {
         if (clicked[a][i][j]) { 
       	  for (var n = 0; n < PARTICLES; n++) {
-  		    system.addParticle(j * XDIST + XSHIFT, i * YDIST + YSHIFT, a);
-  		  }
-  		sounds[a][i].play();
+            system.addParticle(j * XDIST + XSHIFT, i * YDIST + YSHIFT, a);
+          }
+  		    sounds[a][i].play();
         }
       }
     }
   }
 
-  lineLocation = lineLocation + SPEED;
-  if (lineLocation >= width) {
-    lineLocation = 0;
+  // update particles and line
+  if (!paused) {
+    lineLocation = lineLocation + SPEED;
+    if (lineLocation >= width) {
+      lineLocation = 0;
+    }
   }
   system.run();
 }
 
 function mousePressed() {
+  for (var i = 0; i < buttons.length; i++) {
+    if (buttons[i].isMouseOver(mouseX, mouseY)) {
+      buttons[i].onClick();
+    }
+  }
   var d = dist((mouseX - XSHIFT + XDIST/2) % XDIST, (mouseY - YSHIFT + YDIST/2) % YDIST, XDIST/2, YDIST/2);
   if (d < RAD/2) {
     var x = Math.floor((mouseX - XSHIFT + XDIST/2) / XDIST);
@@ -125,6 +159,20 @@ function clearClicked() {
       }
     }
   }
+  lineLocation = 0;
+}
+
+function pausePlayback() {
+  paused = !paused;
+}
+
+function switchInstrument(a) {
+  selectedInstrument = a;
+  for (var i = 0; i < INSTRUMENTS; i++) {
+    buttons[i].isSelected = false;
+  }
+  buttons[a].isSelected = true;
+
 }
 
 //-----------------------------------------------------------------------------------------------------------
@@ -229,4 +277,30 @@ ParticleSystem.prototype.run = function() {
       this.particles.splice(i, 1);
     }
   }
+};
+
+//-----------------------------------------------------------------------------------------------------------
+
+var Button = function(xmin, ymin, xmax, ymax, iconFunc, onClick, selected) {
+  this.xmin = xmin;
+  this.ymin = ymin;
+  this.xmax = xmax;
+  this.ymax = ymax;
+  this.iconFunction = iconFunc;
+  this.onClick = onClick;
+  this.isSelected = selected;
+};
+
+Button.prototype.draw = function(mouseOver) {
+  rectMode(CORNERS);
+  strokeWeight(2);
+  stroke(255, 255, 255, 127);
+  if (mouseOver || this.isSelected) {
+    stroke(255, 255, 255, 255);
+  } 
+  rect(this.xmin, this.ymin, this.xmax, this.ymax, 5);
+};
+
+Button.prototype.isMouseOver = function(mouseX, mouseY) {
+  return (mouseX >= this.xmin && mouseX <= this.xmax && mouseY >= this.ymin && mouseY <= this.ymax);
 };
