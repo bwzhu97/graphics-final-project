@@ -1,16 +1,21 @@
 // import {Particle} from 'particle.js';
 // import {ParticleSystem} from 'particle.js';
 
-var FREQUENCIES = 11;
-var TIMES = 16;
+// window size and placement of grid
+var WINDOW_X = 1440;
+var WINDOW_Y = 720;
 var XDIST = 80;
 var YDIST = 60;
 var XSHIFT = 120;
 var YSHIFT = 60;
-var RAD = 15;
-var SPEED = 2;
-var PARTICLES = 20;
-var INSTRUMENTS = 2;
+
+var FREQUENCIES = 11;
+var TIMES = 16;
+var RAD = 7.5;
+var SPEED = 3;
+var PARTICLES = 10;
+var INSTRUMENTS = 4;
+
 // 0 = glock
 // 1 = xylo
 // 2 = piano
@@ -29,7 +34,18 @@ var buttons = [];
 
 
 function setup() {
-  createCanvas(1440, 720);
+  // window size and placement of grid
+  WINDOW_X = windowWidth;
+  WINDOW_Y = windowHeight;
+  XSHIFT = 130;
+  YSHIFT = WINDOW_Y / 12;
+  XDIST = (WINDOW_X - 260) / 15;
+  YDIST = WINDOW_Y / 12;
+  // playback speed
+  SPEED = XDIST / 20; 
+
+
+  createCanvas(WINDOW_X, WINDOW_Y);
   lineLocation = 0;
 
   // create clickable locations for each instrument
@@ -53,37 +69,30 @@ function setup() {
   for (var i = 0; i < FREQUENCIES; i++) {
   	  sounds[0][i] = loadSound('./sound/glock' + i + '.wav');
   	  sounds[1][i] = loadSound('./sound/xylo' + i + '.wav');
-  	  // sounds[2][i] = loadSound('./sound/glock' + i + '.wav');
-  	  // sounds[3][i] = loadSound('./sound/glock' + i + '.wav');
+  	  sounds[2][i] = loadSound('./sound/piano' + i + '.wav');
+  	  sounds[3][i] = loadSound('./sound/glock' + i + '.wav');
   }
   selectedInstrument = 0;
 
-  // // add reset button
-  // resetButton = createButton('clear');
-  // resetButton.position(30, 30);
-  // resetButton.mousePressed(clearClicked);
-
-  // // add pause button
-  // pauseButton = createButton('pause');
-  // pauseButton.position(30, 70);
-  // pauseButton.mousePressed(pausePlayback);
-
-  // // add switch instrument button
-  // switchButton = createButton('switch');
-  // switchButton.position(30, 110);
-  // switchButton.mousePressed(switchInstrument);
-  buttons[0] = new Button(30, 30, 70, 70, null, () => switchInstrument(0), true);
-  buttons[1] = new Button(30, 70, 70, 110, null, () => switchInstrument(1), false);
-  buttons[2] = new Button(30, 110, 70, 150, null, clearClicked, false);
-  buttons[3] = new Button(30, 150, 70, 190, null, clearClicked, false);
-  buttons[4] = new Button(30, 190, 70, 230, null, pausePlayback, false);
-  buttons[5] = new Button(30, 230, 70, 270, null, clearClicked, false);
+  // create all the buttons
+  var top_gap = (WINDOW_Y - 276) / 2;
+  buttons[0] = new Button(40, top_gap + 104, 80, top_gap + 144, 'diamond', () => switchInstrument(0), true);
+  buttons[1] = new Button(40, top_gap + 148, 80, top_gap + 188, 'circle', () => switchInstrument(1), false);
+  buttons[2] = new Button(40, top_gap + 192, 80, top_gap + 232, 'triangle', () => switchInstrument(2), false);
+  buttons[3] = new Button(40, top_gap + 236, 80, top_gap + 276, 'square', () => switchInstrument(3), false);
+  buttons[4] = new Button(40, top_gap, 80, top_gap + 40, 'pause', pausePlayback, true);
+  buttons[5] = new Button(40, top_gap + 44, 80, top_gap + 84, 'reset', clearClicked, true);
 }
 
 //-----------------------------------------------------------------------------------------------------------
 
 function draw() {
-  background(255, 0, 0);
+  // Background
+  background(20, 7, 28);
+  // b1 = color(0);
+  // b2 = color(40, 15, 56);
+  // setGradient(0, 0, WINDOW_X/2, WINDOW_Y, b1, b2);
+  // setGradient(WINDOW_X/2, 0, WINDOW_X/2, WINDOW_Y, b2, b1);
 
   // grid of dots
   for (var i = 0; i < FREQUENCIES; i++) {
@@ -94,8 +103,24 @@ function draw() {
       if (clicked[selectedInstrument][i][j]) {
         fill(255, 255, 255, 200);
       }
-      // change shape if selected????
-      ellipse(XSHIFT + XDIST*j, YSHIFT + YDIST*i, RAD, RAD);
+      // the grid
+      var xcenter = XSHIFT + XDIST*j;
+      var ycenter = YSHIFT + YDIST*i;
+      if (selectedInstrument === 0) {
+        quad(xcenter + RAD, ycenter, xcenter, ycenter - RAD, 
+          xcenter - RAD, ycenter, xcenter, ycenter + RAD);
+      }
+      else if (selectedInstrument === 1) {
+        ellipse(xcenter, ycenter, RAD * 2, RAD * 2);
+      }
+      else if (selectedInstrument === 2) {
+        triangle(xcenter, ycenter - RAD, xcenter + RAD * Math.sqrt(3) / 2, ycenter + RAD / 2,
+          xcenter - RAD * Math.sqrt(3) / 2, ycenter + RAD / 2);
+      }
+      else if (selectedInstrument === 3) {
+        rectMode(CENTER);
+        rect(xcenter, ycenter, RAD * 1.7, RAD * 1.7);
+      }
     }
   }
 
@@ -110,22 +135,21 @@ function draw() {
   stroke(255);
   line(lineLocation, 0, lineLocation, height);
 
-  if (Math.abs((lineLocation - XSHIFT + XDIST/2) % XDIST - XDIST/2) < SPEED/2) {
-    var j = Math.floor((lineLocation - XSHIFT + XDIST/2) / XDIST);
-    for (var i = 0; i < FREQUENCIES; i++) {
-      for (var a = 0; a < INSTRUMENTS; a++) {
-        if (clicked[a][i][j]) { 
-      	  for (var n = 0; n < PARTICLES; n++) {
-            system.addParticle(j * XDIST + XSHIFT, i * YDIST + YSHIFT, a);
+  // add and update particles and line
+  if (!paused) {
+    if (Math.abs((lineLocation - XSHIFT + XDIST/2) % XDIST - XDIST/2) < SPEED/2) {
+      var j = Math.floor((lineLocation - XSHIFT + XDIST/2) / XDIST);
+      for (var i = 0; i < FREQUENCIES; i++) {
+        for (var a = 0; a < INSTRUMENTS; a++) {
+          if (clicked[a][i][j]) { 
+            for (var n = 0; n < PARTICLES; n++) {
+              system.addParticle(j * XDIST + XSHIFT, i * YDIST + YSHIFT, a);
+            }
+            sounds[a][i].play();
           }
-  		    sounds[a][i].play();
         }
       }
     }
-  }
-
-  // update particles and line
-  if (!paused) {
     lineLocation = lineLocation + SPEED;
     if (lineLocation >= width) {
       lineLocation = 0;
@@ -141,13 +165,26 @@ function mousePressed() {
     }
   }
   var d = dist((mouseX - XSHIFT + XDIST/2) % XDIST, (mouseY - YSHIFT + YDIST/2) % YDIST, XDIST/2, YDIST/2);
-  if (d < RAD/2) {
+  if (d < RAD) {
     var x = Math.floor((mouseX - XSHIFT + XDIST/2) / XDIST);
     var y = Math.floor((mouseY - YSHIFT + YDIST/2) / YDIST);
     clicked[selectedInstrument][y][x] = !clicked[selectedInstrument][y][x];
   }
 }
 
+//-----------------------------------------------------------------------------------------------------------
+
+// adapted from https://p5js.org/examples/color-linear-gradient.html
+function setGradient(x, y, w, h, c1, c2) {
+
+  noFill();
+  for (var i = x; i <= x+w; i++) {
+    var inter = map(i, x, x+w, 0, 1);
+    var c = lerpColor(c1, c2, inter);
+    stroke(c);
+    line(i, y, i, y+h);
+  }
+}
 
 //-----------------------------------------------------------------------------------------------------------
 
@@ -160,6 +197,8 @@ function clearClicked() {
     }
   }
   lineLocation = 0;
+  system.reset();
+
 }
 
 function pausePlayback() {
@@ -179,10 +218,13 @@ function switchInstrument(a) {
 
 // A simple Particle class for glock
 var Particle0 = function(position) {
-  this.acceleration = createVector(0, 0.05);
-  this.velocity = createVector(random(-1, 1), random(-1, 0));
+  this.acceleration = createVector(0, 0.3);
+  this.velocity = createVector(random(-3, 3), random(-4,-2));
   this.position = position.copy();
-  this.lifespan = 255;
+  this.lifespan = 800 * (- this.position.y / (1.5 * WINDOW_Y) + 1);
+  var b1 = color(99, 137, 198);
+  var b2 = color(20, 59, 122);
+  this.color = lerpColor(b1, b2, Math.random());
 };
 
 Particle0.prototype.run = function() {
@@ -190,19 +232,30 @@ Particle0.prototype.run = function() {
   this.display();
 };
 
-// Method to update position
+// Method to update position -- this one bounces on the walls!
 Particle0.prototype.update = function(){
   this.velocity.add(this.acceleration);
   this.position.add(this.velocity);
+  if (this.position.x <= 0 || this.position.x >= WINDOW_X) {
+    this.velocity.x = - this.velocity.x;
+    this.velocity.mult(0.85);
+  }
+  if (this.position.y <= 0 || this.position.y >= WINDOW_Y) {
+    this.velocity.y = - this.velocity.y;
+    this.velocity.mult(0.85);
+  }
   this.lifespan -= 2;
 };
 
 // Method to display
 Particle0.prototype.display = function() {
-  stroke(0, 255, 0, this.lifespan);
-  strokeWeight(2);
-  fill(127, this.lifespan);
-  ellipse(this.position.x, this.position.y, 12, 12);
+  var opacity = Math.min(200, this.lifespan);
+  strokeWeight(0);
+  this.color.setAlpha(opacity);
+  fill(this.color);
+  var size = 10;
+  quad(this.position.x + size, this.position.y, this.position.x, this.position.y - size, 
+    this.position.x - size, this.position.y, this.position.x, this.position.y + size);
 };
 
 // Is the particle still useful?
@@ -215,10 +268,12 @@ Particle0.prototype.isDead = function(){
 
 // A simple Particle class for xylo 
 var Particle1 = function(position) {
-  this.acceleration = createVector(0, 0.05);
-  this.velocity = createVector(random(-1, 1), random(-1, 0));
+  this.acceleration = createVector(0, 0);
+  var random_angle = Math.random() * 2 * Math.PI;
+  var random_radius = Math.random() *0.5 + 1;
+  this.velocity = createVector(random_radius * Math.cos(random_angle), random_radius * Math.sin(random_angle));
   this.position = position.copy();
-  this.lifespan = 255;
+  this.lifespan = 500;
 };
 
 Particle1.prototype.run = function() {
@@ -226,24 +281,137 @@ Particle1.prototype.run = function() {
   this.display();
 };
 
-// Method to update position
+// Method to update position -- this one spirals outwards!
 Particle1.prototype.update = function(){
-  this.velocity.add(this.acceleration);
+  this.velocity.rotate(this.lifespan / 30000);
   this.position.add(this.velocity);
   this.lifespan -= 2;
 };
 
 // Method to display
 Particle1.prototype.display = function() {
-  stroke(0, 0, 255, this.lifespan);
-  strokeWeight(2);
-  fill(127, this.lifespan);
-  ellipse(this.position.x, this.position.y, 12, 12);
+  var opacity = Math.min(255, this.lifespan);
+  strokeWeight(0);
+  fill(0, 0, 255, opacity / 2);
+  ellipse(this.position.x, this.position.y, -this.lifespan/5 + 112, -this.lifespan/5 + 112);
 };
 
 // Is the particle still useful?
 Particle1.prototype.isDead = function(){
   return this.lifespan < 0;
+};
+
+
+//-----------------------------------------------------------------------------------------------------------
+
+// A simple Particle class for piano 
+var Particle2 = function(position) {
+  this.acceleration = createVector(0, 0);
+  var random_angle = Math.random() * 2 * Math.PI;
+  //var random_radius = Math.random() *0.5 + 1;
+  this.velocity = createVector(4 * Math.cos(random_angle), 4 * Math.sin(random_angle));
+  this.position = position.copy();
+  this.timer = 0;
+
+  // triangle coordinates
+  this.x1 = 8 * Math.cos(random_angle);
+  this.y1 = 8 * Math.sin(random_angle);
+  this.x2 = 8 * Math.cos(random_angle + 2*Math.PI/3);
+  this.y2 = 8 * Math.sin(random_angle + 2*Math.PI/3);
+  this.x3 = 8 * Math.cos(random_angle + 4*Math.PI/3);
+  this.y3 = 8 * Math.sin(random_angle + 4*Math.PI/3);
+
+  // triangle trail
+  this.trail = [];
+  this.offscreen = false;
+};
+
+Particle2.prototype.run = function() {
+  this.update();
+  this.display();
+};
+
+// Method to update position
+Particle2.prototype.update = function(){
+  this.velocity.add(this.acceleration);
+  this.position.add(this.velocity);
+  this.timer += 2;
+  if (this.timer % 30 === 0 && !this.offscreen) {
+    this.trail.push([this.position.copy(), this.timer]);
+  }
+  if (this.position.x <= 0 || this.position.x >= WINDOW_X || this.position.y <= 0 || this.position.y >= WINDOW_Y) {
+    this.offscreen = true;
+  }
+};
+
+// Method to display -- shooting triangles and trails
+Particle2.prototype.display = function() {
+  stroke(255, 255, 0);
+  strokeWeight(2);
+  fill(127);
+  triangle(this.position.x + this.x1, this.position.y + this.y1, this.position.x + this.x2, this.position.y + this.y2,
+    this.position.x + this.x3, this.position.y + this.y3);
+  for (var i = 0; i < this.trail.length; i++) {
+    var current_triangle = this.trail[i][0];
+    var timestamp = this.trail[i][1];
+    var opacity = timestamp - this.timer + 200;
+    if (opacity < 0) {
+      this.trail.splice(i, 1);
+    }
+    else {
+      strokeWeight(0);
+      fill(127, opacity);
+      triangle(current_triangle.x + this.x1, current_triangle.y + this.y1, current_triangle.x + this.x2, current_triangle.y + this.y2,
+      current_triangle.x + this.x3, current_triangle.y + this.y3);
+    }
+  }
+};
+
+// Is the particle still useful?
+Particle2.prototype.isDead = function(){
+  return this.offscreen && (this.trail.length === 0);
+};
+
+
+
+//-----------------------------------------------------------------------------------------------------------
+
+// A simple Particle class for last instrument 
+var Particle3 = function(position) {
+  this.acceleration = createVector(0, 0);
+  this.velocity = createVector(random(-3, 3), random(-1, 0));
+  this.position = position.copy();
+  this.attractor = createVector(this.position.x, 30);
+  this.g_val = Math.random() * 100 + 70;
+  this.size = 30;
+};
+
+Particle3.prototype.run = function() {
+  this.update();
+  this.display();
+};
+
+// Method to update position -- this one spirals outwards!
+Particle3.prototype.update = function(){
+  this.acceleration = p5.Vector.sub(this.attractor, this.position);
+  var distance = this.acceleration.mag();
+  this.acceleration.normalize().mult(40/distance);
+  this.velocity.add(this.acceleration);
+  this.position.add(this.velocity);
+  this.size *= 0.98;
+};
+
+// Method to display
+Particle3.prototype.display = function() {
+  strokeWeight(0);
+  fill(232, this.g_val, 27, 200);
+  rectMode(CENTER);
+  rect(this.position.x, this.position.y, this.size, this.size, 3);
+};
+
+// Is the particle still useful?
+Particle3.prototype.isDead = function(){
+  return this.position.x <= 0 || this.position.x >= WINDOW_X || this.position.y <= 0 || this.position.y >= WINDOW_Y;
 };
 
 
@@ -279,26 +447,68 @@ ParticleSystem.prototype.run = function() {
   }
 };
 
+ParticleSystem.prototype.reset = function() {
+  this.particles = [];
+}
+
 //-----------------------------------------------------------------------------------------------------------
 
-var Button = function(xmin, ymin, xmax, ymax, iconFunc, onClick, selected) {
+var Button = function(xmin, ymin, xmax, ymax, icon, onClick, selected) {
   this.xmin = xmin;
   this.ymin = ymin;
   this.xmax = xmax;
   this.ymax = ymax;
-  this.iconFunction = iconFunc;
+  this.icon = icon;
   this.onClick = onClick;
   this.isSelected = selected;
 };
 
 Button.prototype.draw = function(mouseOver) {
+  // draw the button
   rectMode(CORNERS);
   strokeWeight(2);
   stroke(255, 255, 255, 127);
-  if (mouseOver || this.isSelected) {
-    stroke(255, 255, 255, 255);
+  if (this.isSelected) {
+    stroke(255, 255, 255, 220);
   } 
+  if (mouseOver) {
+    stroke(255, 255, 255, 255);
+  }
   rect(this.xmin, this.ymin, this.xmax, this.ymax, 5);
+
+  // draw the icon
+  var xcenter = (this.xmin + this.xmax) / 2;
+  var ycenter = (this.ymin + this.ymax) / 2;
+  if (this.icon === 'diamond') {
+        quad(xcenter + RAD, ycenter, xcenter, ycenter - RAD, 
+          xcenter - RAD, ycenter, xcenter, ycenter + RAD);
+      }
+      else if (this.icon === 'circle') {
+        ellipse(xcenter, ycenter, RAD * 2, RAD * 2);
+      }
+      else if (this.icon === 'triangle') {
+        triangle(xcenter, ycenter - RAD, xcenter + RAD * 2 / Math.sqrt(3), ycenter + RAD,
+          xcenter - RAD * 2 / Math.sqrt(3), ycenter + RAD);
+      }
+      else if (this.icon === 'square') {
+        rectMode(CENTER);
+        rect(xcenter, ycenter, RAD * 2, RAD * 2);
+      }
+      else if (this.icon === 'pause' && !paused) {
+        rectMode(CENTER);
+        rect(xcenter - 5, ycenter, 5, RAD * 2);
+        rect(xcenter + 5, ycenter, 5, RAD * 2);
+      }
+      else if (this.icon === 'pause' && paused) {
+        triangle(xcenter + RAD, ycenter, xcenter - RAD, ycenter + RAD * 2 / Math.sqrt(3),
+          xcenter - RAD, ycenter - RAD * 2 / Math.sqrt(3));
+      }
+      else if (this.icon === 'reset') {
+        strokeWeight(4);
+        line(xcenter - RAD, ycenter - RAD, xcenter + RAD, ycenter + RAD);
+        line(xcenter - RAD, ycenter + RAD, xcenter + RAD, ycenter - RAD);
+      }
+
 };
 
 Button.prototype.isMouseOver = function(mouseX, mouseY) {
