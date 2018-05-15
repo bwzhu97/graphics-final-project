@@ -13,7 +13,7 @@ var FREQUENCIES = 11;
 var TIMES = 16;
 var RAD = 7.5;
 var SPEED = 3;
-var PARTICLES = 10;
+var PARTICLES = 7;
 var INSTRUMENTS = 4;
 
 var clicked = [];
@@ -23,6 +23,7 @@ var paused;
 var sounds = [];
 var selectedInstrument;
 var buttons = [];
+var bg;
 
 //-----------------------------------------------------------------------------------------------------------
 
@@ -84,17 +85,17 @@ function setup() {
   buttons[3] = new Button(40, top_gap + 236, 80, top_gap + 276, 'square', () => switchInstrument(3), false);
   buttons[4] = new Button(40, top_gap, 80, top_gap + 40, 'pause', pausePlayback, true);
   buttons[5] = new Button(40, top_gap + 44, 80, top_gap + 84, 'reset', clearClicked, true);
+
+  // get the background image
+  bg = loadImage("image/background.jpg");
+  image(bg, 0, 0, WINDOW_X, WINDOW_Y);
 }
 
 //-----------------------------------------------------------------------------------------------------------
 
 function draw() {
   // Background
-  background(20, 7, 28);
-  // b1 = color(0);
-  // b2 = color(40, 15, 56);
-  // setGradient(0, 0, WINDOW_X/2, WINDOW_Y, b1, b2);
-  // setGradient(WINDOW_X/2, 0, WINDOW_X/2, WINDOW_Y, b2, b1);
+  background(bg);
 
   // grid of dots
   for (var i = 0; i < FREQUENCIES; i++) {
@@ -134,7 +135,7 @@ function draw() {
 
   // playback line
   strokeWeight(5);
-  stroke(255);
+  stroke(200);
   line(lineLocation, 0, lineLocation, height);
 
   // add and update particles and line
@@ -174,20 +175,6 @@ function mousePressed() {
     var x = Math.floor((mouseX - XSHIFT + XDIST/2) / XDIST);
     var y = Math.floor((mouseY - YSHIFT + YDIST/2) / YDIST);
     clicked[selectedInstrument][y][x] = !clicked[selectedInstrument][y][x];
-  }
-}
-
-//-----------------------------------------------------------------------------------------------------------
-
-// adapted from https://p5js.org/examples/color-linear-gradient.html
-function setGradient(x, y, w, h, c1, c2) {
-
-  noFill();
-  for (var i = x; i <= x+w; i++) {
-    var inter = map(i, x, x+w, 0, 1);
-    var c = lerpColor(c1, c2, inter);
-    stroke(c);
-    line(i, y, i, y+h);
   }
 }
 
@@ -281,8 +268,8 @@ var Particle1 = function(position) {
   this.velocity = createVector(random_radius * Math.cos(random_angle), random_radius * Math.sin(random_angle));
   this.position = position.copy();
   this.lifespan = 500;
-  var b1 = color(103, 111, 117);
-  var b2 = color(71, 106, 132);
+  var b1 = color(235, 244, 244);
+  var b2 = color(186, 242, 242);
   this.color = lerpColor(b1, b2, Math.random());
 };
 
@@ -300,7 +287,7 @@ Particle1.prototype.update = function(){
 
 // Method to display
 Particle1.prototype.display = function() {
-  var opacity = Math.min(127, this.lifespan / 3);
+  var opacity = Math.min(80, this.lifespan / 4);
   strokeWeight(0);
   this.color.setAlpha(opacity);
   fill(this.color);
@@ -324,12 +311,12 @@ var Particle2 = function(position) {
   this.timer = 0;
 
   // triangle coordinates
-  this.x1 = 10 * Math.cos(random_angle);
-  this.y1 = 10 * Math.sin(random_angle);
-  this.x2 = 10 * Math.cos(random_angle + 2*Math.PI/3);
-  this.y2 = 10 * Math.sin(random_angle + 2*Math.PI/3);
-  this.x3 = 10 * Math.cos(random_angle + 4*Math.PI/3);
-  this.y3 = 10 * Math.sin(random_angle + 4*Math.PI/3);
+  this.x1 = 12 * Math.cos(random_angle);
+  this.y1 = 12 * Math.sin(random_angle);
+  this.x2 = 12 * Math.cos(random_angle + 2*Math.PI/3);
+  this.y2 = 12 * Math.sin(random_angle + 2*Math.PI/3);
+  this.x3 = 12 * Math.cos(random_angle + 4*Math.PI/3);
+  this.y3 = 12 * Math.sin(random_angle + 4*Math.PI/3);
 
   // triangle trail
   this.trail = [];
@@ -357,9 +344,8 @@ Particle2.prototype.update = function(){
 // Method to display -- shooting triangles and trails
 Particle2.prototype.display = function() {
   // display the triangle
-  stroke(37, 94, 13);
-  strokeWeight(2);
-  fill(50, 124, 18, 100);
+  strokeWeight(0);
+  fill(27, 109, 8, 150);
   triangle(this.position.x + this.x1, this.position.y + this.y1, this.position.x + this.x2, this.position.y + this.y2,
     this.position.x + this.x3, this.position.y + this.y3);
   // display the trail
@@ -372,7 +358,7 @@ Particle2.prototype.display = function() {
     }
     else {
       strokeWeight(0);
-      fill(99, 66, 1, opacity);
+      fill(91, 54, 0, opacity);
       triangle(current_triangle.x + this.x1, current_triangle.y + this.y1, current_triangle.x + this.x2, current_triangle.y + this.y2,
       current_triangle.x + this.x3, current_triangle.y + this.y3);
     }
