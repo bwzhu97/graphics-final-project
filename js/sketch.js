@@ -30,8 +30,8 @@ var bg;
 
 function setup() {
   // window size and placement of grid
-  WINDOW_X = windowWidth;
-  WINDOW_Y = windowHeight;
+  WINDOW_X = Math.max(1024, windowWidth);
+  WINDOW_Y = Math.max(576, windowHeight);
   XSHIFT = 130;
   YSHIFT = WINDOW_Y / 12;
   XDIST = (WINDOW_X - 260) / 15;
@@ -42,6 +42,7 @@ function setup() {
 
   createCanvas(WINDOW_X, WINDOW_Y);
   lineLocation = 0;
+  paused = true;
 
   // create clickable locations for each instrument
   for (var a = 0; a < INSTRUMENTS; a++) {
@@ -178,6 +179,46 @@ function mousePressed() {
   }
 }
 
+function keyPressed() {
+  // spacebar
+  if (keyCode === 32) {
+    pausePlayback();
+  } else if (keyCode === BACKSPACE) {
+    clearClicked();
+  } else if (keyCode === UP_ARROW && selectedInstrument > 0) {
+    switchInstrument(selectedInstrument - 1);
+  } else if (keyCode === DOWN_ARROW && selectedInstrument < INSTRUMENTS - 1) {
+    switchInstrument(selectedInstrument + 1);
+  }
+}
+
+function windowResized() {
+  WINDOW_X = Math.max(1024, windowWidth);
+  WINDOW_Y = Math.max(576, windowHeight);
+  XSHIFT = 130;
+  YSHIFT = WINDOW_Y / 12;
+  XDIST = (WINDOW_X - 260) / 15;
+  YDIST = WINDOW_Y / 12;
+  // playback speed
+  SPEED = XDIST / 20;
+
+  var top_gap = (WINDOW_Y - 276) / 2;
+  buttons[0].ymin = top_gap + 104;
+  buttons[0].ymax = top_gap + 144;
+  buttons[1].ymin = top_gap + 148;
+  buttons[1].ymax = top_gap + 188;
+  buttons[2].ymin = top_gap + 192;
+  buttons[2].ymax = top_gap + 232;
+  buttons[3].ymin = top_gap + 236;
+  buttons[3].ymax = top_gap + 276;
+  buttons[4].ymin = top_gap;
+  buttons[4].ymax = top_gap + 40;
+  buttons[5].ymin = top_gap + 44;
+  buttons[5].ymax = top_gap + 84;
+
+  resizeCanvas(WINDOW_X, WINDOW_Y);
+}
+
 //-----------------------------------------------------------------------------------------------------------
 
 // button functions
@@ -197,6 +238,9 @@ function clearClicked() {
 
 function pausePlayback() {
   paused = !paused;
+  if (getAudioContext().state !== 'running') {
+    getAudioContext().resume();
+  }
 }
 
 function switchInstrument(a) {
@@ -467,6 +511,7 @@ Button.prototype.draw = function(mouseOver) {
   rectMode(CORNERS);
   strokeWeight(2);
   stroke(255, 255, 255, 127);
+  fill(0, 0, 0, 0);
   if (this.isSelected) {
     stroke(255, 255, 255, 220);
   } 
@@ -479,11 +524,11 @@ Button.prototype.draw = function(mouseOver) {
   var xcenter = (this.xmin + this.xmax) / 2;
   var ycenter = (this.ymin + this.ymax) / 2;
   if (this.icon === 'diamond') {
-        quad(xcenter + RAD, ycenter, xcenter, ycenter - RAD, 
-          xcenter - RAD, ycenter, xcenter, ycenter + RAD);
+        quad(xcenter + RAD+1, ycenter, xcenter, ycenter - RAD-1, 
+          xcenter - RAD-1, ycenter, xcenter, ycenter + RAD+1);
       }
       else if (this.icon === 'circle') {
-        ellipse(xcenter, ycenter, RAD * 2, RAD * 2);
+        ellipse(xcenter, ycenter, RAD * 2.15, RAD * 2.15);
       }
       else if (this.icon === 'triangle') {
         triangle(xcenter, ycenter - RAD, xcenter + RAD * 2 / Math.sqrt(3), ycenter + RAD,
