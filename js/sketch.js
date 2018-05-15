@@ -16,11 +16,6 @@ var SPEED = 3;
 var PARTICLES = 10;
 var INSTRUMENTS = 4;
 
-// 0 = glock
-// 1 = xylo
-// 2 = piano
-// 3 = 
-
 var clicked = [];
 var lineLocation;
 var system;
@@ -28,7 +23,6 @@ var paused;
 var sounds = [];
 var selectedInstrument;
 var buttons = [];
-//var resetButton, pauseButton, switchButton;
 
 //-----------------------------------------------------------------------------------------------------------
 
@@ -68,11 +62,19 @@ function setup() {
   }
   for (var i = 0; i < FREQUENCIES; i++) {
   	  sounds[0][i] = loadSound('./sound/glock' + i + '.wav');
-  	  sounds[1][i] = loadSound('./sound/xylo' + i + '.wav');
+  	  sounds[1][i] = loadSound('./sound/xylophone' + i + '.wav');
   	  sounds[2][i] = loadSound('./sound/piano' + i + '.wav');
-  	  sounds[3][i] = loadSound('./sound/glock' + i + '.wav');
+  	  sounds[3][i] = loadSound('./sound/pizz' + i + '.wav');
   }
   selectedInstrument = 0;
+
+  // add a bit of reverb to sounds
+  reverb = new p5.Reverb();
+  for (var i = 0; i < FREQUENCIES; i++) {
+    for (var j = 0; j < INSTRUMENTS; j++) {
+      reverb.process(sounds[j][i], 4, 8);
+    }
+  }
 
   // create all the buttons
   var top_gap = (WINDOW_Y - 276) / 2;
@@ -158,6 +160,9 @@ function draw() {
   system.run();
 }
 
+
+//-----------------------------------------------------------------------------------------------------------
+
 function mousePressed() {
   for (var i = 0; i < buttons.length; i++) {
     if (buttons[i].isMouseOver(mouseX, mouseY)) {
@@ -187,6 +192,8 @@ function setGradient(x, y, w, h, c1, c2) {
 }
 
 //-----------------------------------------------------------------------------------------------------------
+
+// button functions
 
 function clearClicked() {
   for (var a = 0; a < INSTRUMENTS; a++) {
@@ -221,7 +228,7 @@ var Particle0 = function(position) {
   this.acceleration = createVector(0, 0.3);
   this.velocity = createVector(random(-3, 3), random(-4,-2));
   this.position = position.copy();
-  this.lifespan = 800 * (- this.position.y / (1.5 * WINDOW_Y) + 1);
+  this.lifespan = 600 * (- this.position.y / (1.5 * WINDOW_Y) + 1);
   var b1 = color(99, 137, 198);
   var b2 = color(20, 59, 122);
   this.color = lerpColor(b1, b2, Math.random());
@@ -253,7 +260,7 @@ Particle0.prototype.display = function() {
   strokeWeight(0);
   this.color.setAlpha(opacity);
   fill(this.color);
-  var size = 10;
+  var size = 15;
   quad(this.position.x + size, this.position.y, this.position.x, this.position.y - size, 
     this.position.x - size, this.position.y, this.position.x, this.position.y + size);
 };
@@ -266,7 +273,7 @@ Particle0.prototype.isDead = function(){
 
 //-----------------------------------------------------------------------------------------------------------
 
-// A simple Particle class for xylo 
+// A simple Particle class for xylophone
 var Particle1 = function(position) {
   this.acceleration = createVector(0, 0);
   var random_angle = Math.random() * 2 * Math.PI;
@@ -274,6 +281,9 @@ var Particle1 = function(position) {
   this.velocity = createVector(random_radius * Math.cos(random_angle), random_radius * Math.sin(random_angle));
   this.position = position.copy();
   this.lifespan = 500;
+  var b1 = color(103, 111, 117);
+  var b2 = color(71, 106, 132);
+  this.color = lerpColor(b1, b2, Math.random());
 };
 
 Particle1.prototype.run = function() {
@@ -290,9 +300,10 @@ Particle1.prototype.update = function(){
 
 // Method to display
 Particle1.prototype.display = function() {
-  var opacity = Math.min(255, this.lifespan);
+  var opacity = Math.min(127, this.lifespan / 3);
   strokeWeight(0);
-  fill(0, 0, 255, opacity / 2);
+  this.color.setAlpha(opacity);
+  fill(this.color);
   ellipse(this.position.x, this.position.y, -this.lifespan/5 + 112, -this.lifespan/5 + 112);
 };
 
@@ -308,18 +319,17 @@ Particle1.prototype.isDead = function(){
 var Particle2 = function(position) {
   this.acceleration = createVector(0, 0);
   var random_angle = Math.random() * 2 * Math.PI;
-  //var random_radius = Math.random() *0.5 + 1;
   this.velocity = createVector(4 * Math.cos(random_angle), 4 * Math.sin(random_angle));
   this.position = position.copy();
   this.timer = 0;
 
   // triangle coordinates
-  this.x1 = 8 * Math.cos(random_angle);
-  this.y1 = 8 * Math.sin(random_angle);
-  this.x2 = 8 * Math.cos(random_angle + 2*Math.PI/3);
-  this.y2 = 8 * Math.sin(random_angle + 2*Math.PI/3);
-  this.x3 = 8 * Math.cos(random_angle + 4*Math.PI/3);
-  this.y3 = 8 * Math.sin(random_angle + 4*Math.PI/3);
+  this.x1 = 10 * Math.cos(random_angle);
+  this.y1 = 10 * Math.sin(random_angle);
+  this.x2 = 10 * Math.cos(random_angle + 2*Math.PI/3);
+  this.y2 = 10 * Math.sin(random_angle + 2*Math.PI/3);
+  this.x3 = 10 * Math.cos(random_angle + 4*Math.PI/3);
+  this.y3 = 10 * Math.sin(random_angle + 4*Math.PI/3);
 
   // triangle trail
   this.trail = [];
@@ -346,21 +356,23 @@ Particle2.prototype.update = function(){
 
 // Method to display -- shooting triangles and trails
 Particle2.prototype.display = function() {
-  stroke(255, 255, 0);
+  // display the triangle
+  stroke(37, 94, 13);
   strokeWeight(2);
-  fill(127);
+  fill(50, 124, 18, 100);
   triangle(this.position.x + this.x1, this.position.y + this.y1, this.position.x + this.x2, this.position.y + this.y2,
     this.position.x + this.x3, this.position.y + this.y3);
+  // display the trail
   for (var i = 0; i < this.trail.length; i++) {
     var current_triangle = this.trail[i][0];
     var timestamp = this.trail[i][1];
-    var opacity = timestamp - this.timer + 200;
+    var opacity = timestamp - this.timer + 100;
     if (opacity < 0) {
       this.trail.splice(i, 1);
     }
     else {
       strokeWeight(0);
-      fill(127, opacity);
+      fill(99, 66, 1, opacity);
       triangle(current_triangle.x + this.x1, current_triangle.y + this.y1, current_triangle.x + this.x2, current_triangle.y + this.y2,
       current_triangle.x + this.x3, current_triangle.y + this.y3);
     }
@@ -376,14 +388,14 @@ Particle2.prototype.isDead = function(){
 
 //-----------------------------------------------------------------------------------------------------------
 
-// A simple Particle class for last instrument 
+// A simple Particle class for pizz 
 var Particle3 = function(position) {
   this.acceleration = createVector(0, 0);
   this.velocity = createVector(random(-3, 3), random(-1, 0));
   this.position = position.copy();
   this.attractor = createVector(this.position.x, 30);
   this.g_val = Math.random() * 100 + 70;
-  this.size = 30;
+  this.size = 40;
 };
 
 Particle3.prototype.run = function() {
@@ -391,7 +403,7 @@ Particle3.prototype.run = function() {
   this.display();
 };
 
-// Method to update position -- this one spirals outwards!
+// Method to update position -- this one is attracted upwards!
 Particle3.prototype.update = function(){
   this.acceleration = p5.Vector.sub(this.attractor, this.position);
   var distance = this.acceleration.mag();
@@ -453,6 +465,7 @@ ParticleSystem.prototype.reset = function() {
 
 //-----------------------------------------------------------------------------------------------------------
 
+// A simple button
 var Button = function(xmin, ymin, xmax, ymax, icon, onClick, selected) {
   this.xmin = xmin;
   this.ymin = ymin;
