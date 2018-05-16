@@ -140,14 +140,14 @@ function draw() {
   stroke(200);
   line(lineLocation, 0, lineLocation, height);
 
-  // if (firstClick) {
-  //   textSize(24);
-  //   textAlign(CENTER);
-  //   textFont('Helvetica');
-  //   strokeWeight(0);
-  //   fill(255, 255, 255, 200);
-  //   text('CLICK ON THE GRID TO BEGIN', WINDOW_X/2, WINDOW_Y/2 - YDIST/4);
-  // }
+  if (firstClick) {
+    textSize(24);
+    textAlign(CENTER);
+    textFont('Tahoma');
+    strokeWeight(0);
+    fill(255, 255, 255, 180);
+    text('CLICK ON THE GRID TO BEGIN', WINDOW_X/2, WINDOW_Y/2 - YDIST/3);
+  }
 
   // add and update particles and line
   if (!paused) {
