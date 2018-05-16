@@ -16,6 +16,7 @@ var SPEED = 3;
 var PARTICLES = 7;
 var INSTRUMENTS = 4;
 
+var firstClick = true;
 var clicked = [];
 var lineLocation;
 var system;
@@ -42,7 +43,7 @@ function setup() {
 
   createCanvas(WINDOW_X, WINDOW_Y);
   lineLocation = 0;
-  paused = true;
+  //paused = true;
 
   // create clickable locations for each instrument
   for (var a = 0; a < INSTRUMENTS; a++) {
@@ -102,10 +103,10 @@ function draw() {
   for (var i = 0; i < FREQUENCIES; i++) {
     for (var j = 0; j < TIMES; j++) {
       strokeWeight(2);
-      stroke(255);
+      stroke(255, 255, 255, 127);
       fill(0, 0, 0, 0);
       if (clicked[selectedInstrument][i][j]) {
-        fill(255, 255, 255, 200);
+        fill(255, 255, 255, 100);
       }
       // the grid
       var xcenter = XSHIFT + XDIST*j;
@@ -139,6 +140,15 @@ function draw() {
   stroke(200);
   line(lineLocation, 0, lineLocation, height);
 
+  // if (firstClick) {
+  //   textSize(24);
+  //   textAlign(CENTER);
+  //   textFont('Helvetica');
+  //   strokeWeight(0);
+  //   fill(255, 255, 255, 200);
+  //   text('CLICK ON THE GRID TO BEGIN', WINDOW_X/2, WINDOW_Y/2 - YDIST/4);
+  // }
+
   // add and update particles and line
   if (!paused) {
     if (Math.abs((lineLocation - XSHIFT + XDIST/2) % XDIST - XDIST/2) < SPEED/2) {
@@ -166,6 +176,15 @@ function draw() {
 //-----------------------------------------------------------------------------------------------------------
 
 function mousePressed() {
+
+  if (getAudioContext().state !== 'running') {
+    getAudioContext().resume();
+  }
+
+  if (firstClick) {
+    firstClick = false;
+  }
+
   for (var i = 0; i < buttons.length; i++) {
     if (buttons[i].isMouseOver(mouseX, mouseY)) {
       buttons[i].onClick();
@@ -238,9 +257,6 @@ function clearClicked() {
 
 function pausePlayback() {
   paused = !paused;
-  if (getAudioContext().state !== 'running') {
-    getAudioContext().resume();
-  }
 }
 
 function switchInstrument(a) {
@@ -387,16 +403,11 @@ Particle2.prototype.update = function(){
 
 // Method to display -- shooting triangles and trails
 Particle2.prototype.display = function() {
-  // display the triangle
-  strokeWeight(0);
-  fill(27, 109, 8, 150);
-  triangle(this.position.x + this.x1, this.position.y + this.y1, this.position.x + this.x2, this.position.y + this.y2,
-    this.position.x + this.x3, this.position.y + this.y3);
   // display the trail
   for (var i = 0; i < this.trail.length; i++) {
     var current_triangle = this.trail[i][0];
     var timestamp = this.trail[i][1];
-    var opacity = timestamp - this.timer + 100;
+    var opacity = timestamp - this.timer + 150;
     if (opacity < 0) {
       this.trail.splice(i, 1);
     }
@@ -407,6 +418,12 @@ Particle2.prototype.display = function() {
       current_triangle.x + this.x3, current_triangle.y + this.y3);
     }
   }
+
+  // display the triangle
+  strokeWeight(0);
+  fill(27, 109, 8, 200);
+  triangle(this.position.x + this.x1, this.position.y + this.y1, this.position.x + this.x2, this.position.y + this.y2,
+    this.position.x + this.x3, this.position.y + this.y3);
 };
 
 // Is the particle still useful?
